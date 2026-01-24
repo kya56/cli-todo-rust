@@ -1,6 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::cli::ListMode;
 use std::collections::{HashMap, hash_map::Entry};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TodoList {
     // true = todo, false = done
     pub items: HashMap<String, bool>,
@@ -30,16 +33,18 @@ impl TodoList {
             .iter()
             .filter(|&(_, &value)| match mode {
                 ListMode::All => true,
-                ListMode::DoneOnly => !value,
+                ListMode::Done => !value,
                 ListMode::Todo => value,
             })
             .map(|(key, value)| (key.clone(), *value))
             .collect()
     }
 
-    pub fn remove(&mut self, key: String) {
-        if let Entry::Occupied(entry) = self.items.entry(key) {
-            entry.remove_entry();
+    pub fn remove(&mut self, key: &str) -> Result<(), String> {
+        if self.items.remove(key).is_some() {
+            Ok(())
+        } else {
+            Err(format!("Key {} is not found.", key))
         }
     }
 }

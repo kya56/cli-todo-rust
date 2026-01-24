@@ -11,7 +11,7 @@ pub struct Cli {
 #[derive(ValueEnum, Clone, Debug)]
 pub enum ListMode {
     All,
-    DoneOnly,
+    Done,
     Todo,
 }
 
@@ -31,5 +31,8 @@ pub enum Command {
             default_value_t = ListMode::All,
         )]
         mode: ListMode,
+    },
+    Delete {
+        key: String,
     },
 }

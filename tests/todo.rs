@@ -67,14 +67,14 @@ fn list_items_all() {
 }
 
 #[test]
-fn list_items_done_only() {
+fn list_items_done() {
     let mut todo = TodoList::new();
     todo.add(String::from("First task"));
     todo.add(String::from("Second task"));
     todo.add(String::from("Third task"));
     let _ = todo.mark(String::from("Third task"), false);
 
-    let items = todo.list(ListMode::DoneOnly);
+    let items = todo.list(ListMode::Done);
 
     assert!(items.iter().any(|e| *e.0 == "Third task"));
     assert_eq!(items.len(), 1);
@@ -102,6 +102,6 @@ fn remove_item() {
 
     assert_eq!(todo.items.get("First task"), Some(&true));
 
-    todo.remove(String::from("First task"));
+    let _ = todo.remove(&String::from("First task"));
     assert_eq!(todo.items.get("First task"), None);
 }

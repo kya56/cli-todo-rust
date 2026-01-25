@@ -35,9 +35,9 @@ fn add_item_does_not_change_value() {
 fn mark_item() {
     let mut todo = TodoList::new();
     todo.add(String::from("Take a dog out"));
-    let _ = todo.mark(String::from("Take a dog out"), false);
+    let _ = todo.mark("Take a dog out", false);
     assert_eq!(todo.items.get("Take a dog out"), Some(&false));
-    let _ = todo.mark(String::from("Take a dog out"), true);
+    let _ = todo.mark("Take a dog out", true);
     assert_eq!(todo.items.get("Take a dog out"), Some(&true));
 }
 
@@ -45,8 +45,8 @@ fn mark_item() {
 fn mark_item_does_not_exist() {
     let mut todo = TodoList::new();
     assert_eq!(
-        todo.mark(String::from("Not existing"), false),
-        Err(String::from("Not existing"))
+        todo.mark("Not existing", false),
+        Err(String::from("Key 'Not existing' is not found."))
     );
 }
 
@@ -56,7 +56,7 @@ fn list_items_all() {
     todo.add(String::from("First task"));
     todo.add(String::from("Second task"));
     todo.add(String::from("Third task"));
-    let _ = todo.mark(String::from("Third task"), false);
+    let _ = todo.mark("Third task", false);
 
     let items = todo.list(ListMode::All);
 
@@ -72,7 +72,7 @@ fn list_items_done() {
     todo.add(String::from("First task"));
     todo.add(String::from("Second task"));
     todo.add(String::from("Third task"));
-    let _ = todo.mark(String::from("Third task"), false);
+    let _ = todo.mark("Third task", false);
 
     let items = todo.list(ListMode::Done);
 
@@ -86,13 +86,27 @@ fn list_items_todo() {
     todo.add(String::from("First task"));
     todo.add(String::from("Second task"));
     todo.add(String::from("Third task"));
-    let _ = todo.mark(String::from("Third task"), false);
+    let _ = todo.mark("Third task", false);
 
     let items = todo.list(ListMode::Todo);
 
     assert!(items.iter().any(|e| *e.0 == "First task"));
     assert!(items.iter().any(|e| *e.0 == "Second task"));
     assert_eq!(items.len(), 2);
+}
+
+#[test]
+fn pending() {
+    let mut todo = TodoList::new();
+    todo.add(String::from("First task"));
+    todo.add(String::from("Second task"));
+    todo.add(String::from("Third task"));
+    let _ = todo.mark("Third task", false);
+
+    let pending = todo.pending();
+    assert!(pending.iter().any(|x| x == "First task"));
+    assert!(pending.iter().any(|x| x == "Second task"));
+    assert_eq!(pending.len(), 2);
 }
 
 #[test]

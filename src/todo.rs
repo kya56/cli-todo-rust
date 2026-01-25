@@ -21,11 +21,14 @@ impl TodoList {
         }
     }
 
-    pub fn mark(&mut self, key: String, value: bool) -> Result<String, String> {
-        let x = self.items.get_mut(&key).ok_or(&key)?;
-        *x = value;
-
-        Ok(key)
+    pub fn mark(&mut self, key: &str, value: bool) -> Result<(), String> {
+        match self.items.get_mut(key) {
+            Some(x) => {
+                *x = value;
+                Ok(())
+            }
+            None => Err(format!("Key '{}' is not found.", key)),
+        }
     }
 
     pub fn list(&self, mode: ListMode) -> HashMap<String, bool> {
@@ -37,6 +40,26 @@ impl TodoList {
                 ListMode::Todo => value,
             })
             .map(|(key, value)| (key.clone(), *value))
+            .collect()
+    }
+
+    pub fn all(&self) -> Vec<String> {
+        self.items.iter().map(|(key, _)| key.clone()).collect()
+    }
+
+    pub fn pending(&self) -> Vec<String> {
+        self.items
+            .iter()
+            .filter(|x| x.1 == &true)
+            .map(|(key, _)| key.clone())
+            .collect()
+    }
+
+    pub fn done(&self) -> Vec<String> {
+        self.items
+            .iter()
+            .filter(|x| !*x.1)
+            .map(|(key, _)| key.clone())
             .collect()
     }
 

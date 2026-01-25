@@ -20,10 +20,8 @@ pub enum Command {
     Add {
         key: String,
     },
-    #[command(name = "done")]
-    MarkDone {
-        key: String,
-    },
+    MarkDone,
+    UndoDone,
     List {
         #[arg(
             long,
@@ -32,7 +30,5 @@ pub enum Command {
         )]
         mode: ListMode,
     },
-    Delete {
-        key: String,
-    },
+    Delete,
 }

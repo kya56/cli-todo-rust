@@ -1,4 +1,5 @@
 use clap::Parser;
+use dialoguer::{Confirm, Select};
 use todo_cli::cli::{Cli, Command, ListMode};
 use todo_cli::file::{load_todos, save_todos};
 
@@ -12,10 +13,55 @@ fn main() -> Result<(), String> {
             todo.add(key);
             save_todos(&todo);
         }
-        Command::MarkDone { key } => {
-            todo.mark(key, false)
-                .map_err(|e| format!("Invalid key {}", e))?;
+        Command::MarkDone => {
+            let items = todo.pending();
 
+            if items.is_empty() {
+                println!("No todos to mark as done");
+                return Ok(());
+            }
+
+            let selection = match Select::new()
+                .with_prompt("Select todo to mark as done")
+                .items(&items)
+                .default(0)
+                .interact()
+            {
+                Ok(index) => index,
+                Err(_) => {
+                    println!("Action cancelled");
+                    return Ok(());
+                }
+            };
+
+            let key = items[selection].as_str();
+            todo.mark(key, false)?;
+
+            save_todos(&todo);
+        }
+        Command::UndoDone => {
+            let items = todo.done();
+
+            if items.is_empty() {
+                println!("No todos to undo done");
+                return Ok(());
+            }
+
+            let selection = match Select::new()
+                .with_prompt("Select completed todo to undo done")
+                .items(&items)
+                .default(0)
+                .interact()
+            {
+                Ok(index) => index,
+                Err(_) => {
+                    println!("Action cancelled");
+                    return Ok(());
+                }
+            };
+
+            let key = items[selection].as_str();
+            todo.mark(key, true)?;
             save_todos(&todo);
         }
         Command::List { mode } => {
@@ -46,9 +92,43 @@ fn main() -> Result<(), String> {
                 }
             }
         }
-        Command::Delete { key } => {
-            todo.remove(&key)?;
+        Command::Delete => {
+            let items = todo.all();
+
+            if items.is_empty() {
+                println!("No todos to delete");
+                return Ok(());
+            }
+
+            let selection = match Select::new()
+                .with_prompt("Select todo to delete")
+                .items(&items)
+                .default(0)
+                .interact()
+            {
+                Ok(index) => index,
+                Err(_) => {
+                    println!("Action cancelled");
+                    return Ok(());
+                }
+            };
+
+            let key = items[selection].as_str();
+
+            let confirm = Confirm::new()
+                .with_prompt(format!("Are you sure you want to delete '{}'?", key))
+                .default(false)
+                .interact()
+                .map_err(|e| e.to_string())?;
+
+            if !confirm {
+                println!("Delete cancelled");
+                return Ok(());
+            }
+
+            todo.remove(key)?;
             save_todos(&todo);
+            println!("Deleted '{}'", key);
         }
     };
 

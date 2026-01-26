@@ -5,8 +5,8 @@ use todo_cli::todo::{Todo, TodoList};
 fn add_item() {
     let mut todos = TodoList::new();
     todos.add(String::from("Take a dog out"));
-    assert!(exist(&todos.items, "Take a dog out"));
-    assert_eq!(find(&todos.items, "Take a dog out").unwrap().done, false);
+    assert!(exist(&todos.items, "Take a dog out", 1));
+    assert_eq!(find(&todos.items, 1).unwrap().done, false);
 }
 
 #[test]
@@ -14,7 +14,8 @@ fn add_item_with_duplicate_title() {
     let mut todos = TodoList::new();
     todos.add(String::from("Take a dog out"));
     todos.add(String::from("Take a dog out"));
-    assert!(exist(&todos.items, "Take a dog out"));
+    assert!(exist(&todos.items, "Take a dog out", 1));
+    assert!(exist(&todos.items, "Take a dog out", 2));
     assert_eq!(todos.items.len(), 2);
 }
 
@@ -22,18 +23,18 @@ fn add_item_with_duplicate_title() {
 fn mark_item() {
     let mut todo = TodoList::new();
     todo.add(String::from("Take a dog out"));
-    let _ = todo.mark("Take a dog out", true);
-    assert_eq!(find(&todo.items, "Take a dog out").unwrap().done, true);
-    let _ = todo.mark("Take a dog out", false);
-    assert_eq!(find(&todo.items, "Take a dog out").unwrap().done, false);
+    let _ = todo.mark(1, true);
+    assert_eq!(find(&todo.items, 1).unwrap().done, true);
+    let _ = todo.mark(1, false);
+    assert_eq!(find(&todo.items, 1).unwrap().done, false);
 }
 
 #[test]
 fn mark_item_does_not_exist() {
     let mut todos = TodoList::new();
     assert_eq!(
-        todos.mark("Not existing", false),
-        Err(String::from("Key 'Not existing' is not found."))
+        todos.mark(1, false),
+        Err(String::from("Todo '1' is not found."))
     );
 }
 
@@ -43,13 +44,13 @@ fn list_items_all() {
     todos.add(String::from("First task"));
     todos.add(String::from("Second task"));
     todos.add(String::from("Third task"));
-    let _ = todos.mark("Third task", true);
+    let _ = todos.mark(3, true);
 
     let items = todos.list(ListMode::All);
 
-    assert!(exist(items.iter().copied(), "First task"));
-    assert!(exist(items.iter().copied(), "Second task"));
-    assert!(exist(items.iter().copied(), "Third task"));
+    assert!(exist(items.iter().copied(), "First task", 1));
+    assert!(exist(items.iter().copied(), "Second task", 2));
+    assert!(exist(items.iter().copied(), "Third task", 3));
     assert_eq!(items.len(), 3);
 }
 
@@ -59,11 +60,11 @@ fn list_items_done() {
     todo.add(String::from("First task"));
     todo.add(String::from("Second task"));
     todo.add(String::from("Third task"));
-    let _ = todo.mark("Third task", true);
+    let _ = todo.mark(3, true);
 
     let items = todo.list(ListMode::Done);
 
-    assert!(exist(items.iter().copied(), "Third task"));
+    assert!(exist(items.iter().copied(), "Third task", 3));
     assert_eq!(items.len(), 1);
 }
 
@@ -73,12 +74,12 @@ fn list_items_todo() {
     todo.add(String::from("First task"));
     todo.add(String::from("Second task"));
     todo.add(String::from("Third task"));
-    let _ = todo.mark("Third task", true);
+    let _ = todo.mark(3, true);
 
     let items = todo.list(ListMode::Todo);
 
-    assert!(exist(items.iter().copied(), "First task"));
-    assert!(exist(items.iter().copied(), "Second task"));
+    assert!(exist(items.iter().copied(), "First task", 1));
+    assert!(exist(items.iter().copied(), "Second task", 2));
     assert_eq!(items.len(), 2);
 }
 
@@ -87,22 +88,22 @@ fn remove_item() {
     let mut todo = TodoList::new();
     todo.add(String::from("First task"));
 
-    assert!(exist(&todo.items, "First task"));
+    assert!(exist(&todo.items, "First task", 1));
 
-    let _ = todo.remove(&String::from("First task"));
-    assert_eq!(exist(&todo.items, "First task"), false);
+    let _ = todo.remove(1);
+    assert_eq!(exist(&todo.items, "First task", 1), false);
 }
 
-fn exist<'a, I>(todos: I, title: &str) -> bool
+fn exist<'a, I>(todos: I, title: &str, id: u64) -> bool
 where
     I: IntoIterator<Item = &'a Todo>,
 {
-    todos.into_iter().any(|t| t.title == title)
+    todos.into_iter().any(|t| t.title == title && t.id == id)
 }
 
-fn find<'a, I>(todos: I, title: &str) -> Option<&'a Todo>
+fn find<'a, I>(todos: I, id: u64) -> Option<&'a Todo>
 where
     I: IntoIterator<Item = &'a Todo>,
 {
-    todos.into_iter().find(|t| t.title == title)
+    todos.into_iter().find(|t| t.id == id)
 }

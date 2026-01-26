@@ -6,29 +6,39 @@ use crate::cli::ListMode;
 pub struct TodoList {
     // true = todo, false = done
     pub items: Vec<Todo>,
+    next_id: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Todo {
+    pub id: u64,
     pub title: String,
     pub done: bool,
 }
 
 impl TodoList {
     pub fn new() -> TodoList {
-        TodoList { items: Vec::new() }
+        TodoList {
+            items: Vec::new(),
+            next_id: 1,
+        }
     }
 
     pub fn add(&mut self, title: String) {
-        self.items.push(Todo { title, done: false });
+        self.items.push(Todo {
+            id: self.next_id,
+            title,
+            done: false,
+        });
+        self.next_id += 1;
     }
 
-    pub fn mark(&mut self, title: &str, value: bool) -> Result<(), String> {
+    pub fn mark(&mut self, id: u64, value: bool) -> Result<(), String> {
         let todo = self
             .items
             .iter_mut()
-            .find(|x| x.title == title)
-            .ok_or_else(|| format!("Key '{}' is not found.", title))?;
+            .find(|x| x.id == id)
+            .ok_or_else(|| format!("Todo '{}' is not found.", id))?;
         todo.done = value;
         Ok(())
     }
@@ -44,12 +54,12 @@ impl TodoList {
             .collect()
     }
 
-    pub fn remove(&mut self, title: &str) -> Result<(), String> {
+    pub fn remove(&mut self, id: u64) -> Result<(), String> {
         let index = self
             .items
             .iter()
-            .position(|x| x.title == title)
-            .ok_or_else(|| format!("Key '{}' is not found", title))?;
+            .position(|x| x.id == id)
+            .ok_or_else(|| format!("Todo '{}' is not found", id))?;
 
         self.items.remove(index);
         Ok(())

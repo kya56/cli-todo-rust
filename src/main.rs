@@ -14,16 +14,18 @@ fn main() -> Result<(), String> {
             save_todos(&todo);
         }
         Command::MarkDone => {
-            let items = todo.pending();
+            let items = todo.list(ListMode::Todo);
 
             if items.is_empty() {
                 println!("No todos to mark as done");
                 return Ok(());
             }
 
+            let titles: Vec<&str> = items.iter().map(|x| x.title.as_str()).collect();
+
             let selection = match Select::new()
                 .with_prompt("Select todo to mark as done")
-                .items(&items)
+                .items(&titles)
                 .default(0)
                 .interact()
             {
@@ -34,22 +36,24 @@ fn main() -> Result<(), String> {
                 }
             };
 
-            let key = items[selection].as_str();
-            todo.mark(key, false)?;
+            let title = titles[selection].to_string();
+            todo.mark(&title, false)?;
 
             save_todos(&todo);
         }
         Command::UndoDone => {
-            let items = todo.done();
+            let items = todo.list(ListMode::Done);
 
             if items.is_empty() {
                 println!("No todos to undo done");
                 return Ok(());
             }
 
+            let titles: Vec<&str> = items.iter().map(|x| x.title.as_str()).collect();
+
             let selection = match Select::new()
                 .with_prompt("Select completed todo to undo done")
-                .items(&items)
+                .items(&titles)
                 .default(0)
                 .interact()
             {
@@ -60,8 +64,8 @@ fn main() -> Result<(), String> {
                 }
             };
 
-            let key = items[selection].as_str();
-            todo.mark(key, true)?;
+            let title = titles[selection].to_string();
+            todo.mark(&title, true)?;
             save_todos(&todo);
         }
         Command::List { mode } => {
@@ -72,37 +76,39 @@ fn main() -> Result<(), String> {
                     println!("# TODO");
                     items
                         .iter()
-                        .filter(|x| x.1 == &true)
-                        .for_each(|x| println!("* {}", *x.0));
+                        .filter(|x| x.done == false)
+                        .for_each(|x| println!("* {}", x.title));
                     println!();
 
                     println!("# DONE");
                     items
                         .iter()
-                        .filter(|x| x.1 == &false)
-                        .for_each(|x| println!("* {}", *x.0));
+                        .filter(|x| x.done == true)
+                        .for_each(|x| println!("* {}", x.title));
                 }
                 ListMode::Done => {
                     println!("# DONE");
-                    items.iter().for_each(|x| println!(" * {}", *x.0));
+                    items.iter().for_each(|x| println!(" * {}", x.title));
                 }
                 ListMode::Todo => {
                     println!("# TODO");
-                    items.iter().for_each(|x| println!(" * {}", *x.0));
+                    items.iter().for_each(|x| println!(" * {}", x.title));
                 }
             }
         }
         Command::Delete => {
-            let items = todo.all();
+            let items = todo.list(ListMode::All);
 
             if items.is_empty() {
                 println!("No todos to delete");
                 return Ok(());
             }
 
+            let titles: Vec<&str> = items.iter().map(|x| x.title.as_str()).collect();
+
             let selection = match Select::new()
                 .with_prompt("Select todo to delete")
-                .items(&items)
+                .items(&titles)
                 .default(0)
                 .interact()
             {
@@ -113,10 +119,10 @@ fn main() -> Result<(), String> {
                 }
             };
 
-            let key = items[selection].as_str();
+            let title = titles[selection].to_string();
 
             let confirm = Confirm::new()
-                .with_prompt(format!("Are you sure you want to delete '{}'?", key))
+                .with_prompt(format!("Are you sure you want to delete '{}'?", title))
                 .default(false)
                 .interact()
                 .map_err(|e| e.to_string())?;
@@ -126,9 +132,9 @@ fn main() -> Result<(), String> {
                 return Ok(());
             }
 
-            todo.remove(key)?;
+            todo.remove(&title)?;
             save_todos(&todo);
-            println!("Deleted '{}'", key);
+            println!("Deleted '{}'", title);
         }
     };
 

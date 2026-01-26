@@ -1,4 +1,3 @@
-use todo_cli::cli::ListMode;
 use todo_cli::todo::{Todo, TodoList};
 
 #[test]
@@ -46,11 +45,11 @@ fn list_items_all() {
     todos.add(String::from("Third task"));
     let _ = todos.mark(3, true);
 
-    let items = todos.list(ListMode::All);
+    let items = todos.list();
 
-    assert!(exist(items.iter().copied(), "First task", 1));
-    assert!(exist(items.iter().copied(), "Second task", 2));
-    assert!(exist(items.iter().copied(), "Third task", 3));
+    assert!(exist(items, "First task", 1));
+    assert!(exist(items, "Second task", 2));
+    assert!(exist(items, "Third task", 3));
     assert_eq!(items.len(), 3);
 }
 
@@ -62,7 +61,7 @@ fn list_items_done() {
     todo.add(String::from("Third task"));
     let _ = todo.mark(3, true);
 
-    let items = todo.list(ListMode::Done);
+    let items: Vec<&Todo> = todo.done().collect();
 
     assert!(exist(items.iter().copied(), "Third task", 3));
     assert_eq!(items.len(), 1);
@@ -76,7 +75,7 @@ fn list_items_todo() {
     todo.add(String::from("Third task"));
     let _ = todo.mark(3, true);
 
-    let items = todo.list(ListMode::Todo);
+    let items: Vec<&Todo> = todo.todo().collect();
 
     assert!(exist(items.iter().copied(), "First task", 1));
     assert!(exist(items.iter().copied(), "Second task", 2));

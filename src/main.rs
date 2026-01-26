@@ -2,6 +2,7 @@ use clap::Parser;
 use dialoguer::{Confirm, Select};
 use todo_cli::cli::{Cli, Command, ListMode};
 use todo_cli::file::{load_todos, save_todos};
+use todo_cli::todo::Todo;
 
 fn main() -> Result<(), String> {
     let cli = Cli::parse();
@@ -14,7 +15,7 @@ fn main() -> Result<(), String> {
             save_todos(&todo);
         }
         Command::MarkDone => {
-            let items = todo.list(ListMode::Todo);
+            let items: Vec<&Todo> = todo.todo().collect();
 
             if items.is_empty() {
                 println!("No todos to mark as done");
@@ -44,7 +45,7 @@ fn main() -> Result<(), String> {
             save_todos(&todo);
         }
         Command::UndoDone => {
-            let items = todo.list(ListMode::Done);
+            let items: Vec<&Todo> = todo.done().collect();
 
             if items.is_empty() {
                 println!("No todos to undo done");
@@ -73,7 +74,7 @@ fn main() -> Result<(), String> {
             save_todos(&todo);
         }
         Command::List { mode } => {
-            let items = todo.list(mode.clone());
+            let items = todo.list();
 
             match mode {
                 ListMode::All => {
@@ -105,7 +106,7 @@ fn main() -> Result<(), String> {
             }
         }
         Command::Delete => {
-            let items = todo.list(ListMode::All);
+            let items = todo.list();
 
             if items.is_empty() {
                 println!("No todos to delete");

@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::cli::ListMode;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoList {
     // true = todo, false = done
@@ -43,15 +41,16 @@ impl TodoList {
         Ok(())
     }
 
-    pub fn list(&self, mode: ListMode) -> Vec<&Todo> {
-        self.items
-            .iter()
-            .filter(|x| match mode {
-                ListMode::All => true,
-                ListMode::Done => x.done,
-                ListMode::Todo => !x.done,
-            })
-            .collect()
+    pub fn todo(&self) -> impl Iterator<Item = &Todo> {
+        self.items.iter().filter(|x| !x.done)
+    }
+
+    pub fn done(&self) -> impl Iterator<Item = &Todo> {
+        self.items.iter().filter(|x| x.done)
+    }
+
+    pub fn list(&self) -> &[Todo] {
+        &self.items
     }
 
     pub fn remove(&mut self, id: u64) -> Result<(), String> {

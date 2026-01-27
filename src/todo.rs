@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoList {
@@ -53,6 +54,17 @@ impl TodoList {
         &self.items
     }
 
+    pub fn update_title(&mut self, id: u64, title: &str) -> Result<(), String> {
+        let todo = self
+            .items
+            .iter_mut()
+            .find(|x| x.id == id)
+            .ok_or_else(|| format!("Todo {} not found", id))?;
+
+        todo.title = title.to_string();
+        Ok(())
+    }
+
     pub fn remove(&mut self, id: u64) -> Result<(), String> {
         let index = self
             .items
@@ -62,5 +74,11 @@ impl TodoList {
 
         self.items.remove(index);
         Ok(())
+    }
+}
+
+impl fmt::Display for Todo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}] {}", self.id, self.title)
     }
 }

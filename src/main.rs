@@ -1,6 +1,6 @@
 use clap::Parser;
-use dialoguer::{Confirm, Select};
-use todo_cli::cli::{Cli, Command, ListMode};
+use dialoguer::Input;
+use todo_cli::cli::{Cli, Command, ListMode, prompt_confirm, prompt_select};
 use todo_cli::file::{load_todos, save_todos};
 use todo_cli::todo::Todo;
 
@@ -22,21 +22,9 @@ fn main() -> Result<(), String> {
                 return Ok(());
             }
 
-            let labels: Vec<String> = items
-                .iter()
-                .map(|x| format!("[{}] {}", x.id, x.title))
-                .collect();
-
-            let selection = match Select::new()
-                .with_prompt("Select todo to mark as done")
-                .items(&labels)
-                .interact()
-            {
-                Ok(index) => index,
-                Err(_) => {
-                    println!("Action cancelled");
-                    return Ok(());
-                }
+            let Some(selection) = prompt_select(&items, "Select a todo to mark as done")? else {
+                println!("Action cancelled");
+                return Ok(());
             };
 
             let id = items[selection].id;
@@ -52,21 +40,10 @@ fn main() -> Result<(), String> {
                 return Ok(());
             }
 
-            let labels: Vec<String> = items
-                .iter()
-                .map(|x| format!("[{}] {}", x.id, x.title))
-                .collect();
-
-            let selection = match Select::new()
-                .with_prompt("Select completed todo to undo done")
-                .items(&labels)
-                .interact()
-            {
-                Ok(index) => index,
-                Err(_) => {
-                    println!("Action cancelled");
-                    return Ok(());
-                }
+            let Some(selection) = prompt_select(&items, "Select completed todo to undo done")?
+            else {
+                println!("Action cancelled");
+                return Ok(());
             };
 
             let id = items[selection].id;
@@ -105,6 +82,43 @@ fn main() -> Result<(), String> {
                 }
             }
         }
+        Command::Update => {
+            let items = todo.list();
+
+            if items.is_empty() {
+                println!("No todos to update");
+                return Ok(());
+            }
+
+            let Some(selection) = prompt_select(&items, "Select toddo to update")? else {
+                println!("Action cancelled");
+                return Ok(());
+            };
+
+            let id = items[selection].id;
+            let title = items[selection].title.clone();
+            let new_title = match Input::<String>::new()
+                .with_prompt("Edit title")
+                .with_initial_text(&title)
+                .interact_text()
+            {
+                Ok(title) => title,
+                Err(_) => {
+                    println!("Action cancelled");
+                    return Ok(());
+                }
+            };
+
+            if new_title.trim() == title {
+                println!("Title unchanged");
+                return Ok(());
+            }
+
+            todo.update_title(id, &new_title)?;
+            save_todos(&todo);
+
+            println!("Todo '[{}] {}' updated to {}", id, title, new_title);
+        }
         Command::Delete => {
             let items = todo.list();
 
@@ -113,31 +127,16 @@ fn main() -> Result<(), String> {
                 return Ok(());
             }
 
-            let labels: Vec<String> = items
-                .iter()
-                .map(|x| format!("[{}] {}", x.id, x.title))
-                .collect();
-
-            let selection = match Select::new()
-                .with_prompt("Select todo to delete")
-                .items(&labels)
-                .interact()
-            {
-                Ok(index) => index,
-                Err(_) => {
-                    println!("Action cancelled");
-                    return Ok(());
-                }
+            let Some(selection) = prompt_select(&items, "Select todo to delete")? else {
+                println!("Action cancelled");
+                return Ok(());
             };
 
             let id = items[selection].id;
             let title = items[selection].title.clone();
 
-            let confirm = Confirm::new()
-                .with_prompt(format!("Are you sure you want to delete '{}'?", title))
-                .default(false)
-                .interact()
-                .map_err(|e| e.to_string())?;
+            let confirm =
+                prompt_confirm(format!("Are you sure you want to delete '{}'?", title).as_str())?;
 
             if !confirm {
                 println!("Delete cancelled");

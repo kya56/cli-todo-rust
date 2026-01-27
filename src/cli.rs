@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
+use dialoguer::{Confirm, Select};
 
 #[derive(Parser)]
 #[command(name = "todo")]
@@ -31,4 +32,25 @@ pub enum Command {
         mode: ListMode,
     },
     Delete,
+    Update,
+}
+
+pub fn prompt_select<T: std::fmt::Display>(
+    items: &[T],
+    prompt_title: &str,
+) -> Result<Option<usize>, String> {
+    Select::new()
+        .with_prompt(prompt_title)
+        .items(items)
+        .interact()
+        .map(Some)
+        .map_err(|e| e.to_string())
+}
+
+pub fn prompt_confirm(prompt_title: &str) -> Result<bool, String> {
+    Confirm::new()
+        .with_prompt(prompt_title)
+        .default(false)
+        .interact()
+        .map_err(|e| e.to_string())
 }

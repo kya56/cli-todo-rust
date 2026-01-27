@@ -83,6 +83,26 @@ fn list_items_todo() {
 }
 
 #[test]
+fn update_title() {
+    let mut todo = TodoList::new();
+    todo.add(String::from("First task"));
+    let _ = todo.update_title(1, "Updated task");
+
+    assert!(exist(&todo.items, "Updated task", 1));
+    assert_eq!(exist(&todo.items, "First task", 1), false);
+}
+
+#[test]
+fn update_title_not_existing() {
+    let mut todo = TodoList::new();
+    todo.add(String::from("First task"));
+    assert_eq!(
+        todo.update_title(2, "Updated task"),
+        Err(String::from("Todo 2 not found"))
+    );
+}
+
+#[test]
 fn remove_item() {
     let mut todo = TodoList::new();
     todo.add(String::from("First task"));

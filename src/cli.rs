@@ -1,6 +1,6 @@
+use crate::prompter::Prompter;
 use crate::todo::{Todo, TodoList};
 use clap::{Parser, Subcommand, ValueEnum};
-use dialoguer::{Confirm, Input, Select};
 
 #[derive(Parser)]
 #[command(name = "todo")]
@@ -36,12 +36,17 @@ pub enum Command {
     Update,
 }
 
+#[derive(ValueEnum, Clone, Debug, PartialEq)]
 pub enum RunResult {
     NoChange,
     Changed,
 }
 
-pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
+pub fn run(
+    command: Command,
+    todo: &mut TodoList,
+    prompter: &dyn Prompter,
+) -> Result<RunResult, String> {
     match command {
         Command::Add { key } => {
             todo.add(key);
@@ -55,7 +60,9 @@ pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
                 return Ok(RunResult::NoChange);
             }
 
-            let Some(selection) = prompt_select(&items, "Select a todo to mark as done")? else {
+            let labels: Vec<String> = items.iter().map(|x| x.fmt()).collect();
+
+            let Some(selection) = prompter.select(&labels, "Select a todo to mark as done")? else {
                 println!("Action cancelled");
                 return Ok(RunResult::NoChange);
             };
@@ -73,7 +80,9 @@ pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
                 return Ok(RunResult::NoChange);
             }
 
-            let Some(selection) = prompt_select(&items, "Select completed todo to undo done")?
+            let labels: Vec<String> = items.iter().map(|x| x.fmt()).collect();
+
+            let Some(selection) = prompter.select(&labels, "Select completed todo to undo done")?
             else {
                 println!("Action cancelled");
                 return Ok(RunResult::NoChange);
@@ -125,23 +134,18 @@ pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
                 return Ok(RunResult::NoChange);
             }
 
-            let Some(selection) = prompt_select(&items, "Select toddo to update")? else {
+            let labels: Vec<String> = items.iter().map(|x| x.fmt()).collect();
+
+            let Some(selection) = prompter.select(&labels, "Select toddo to update")? else {
                 println!("Action cancelled");
                 return Ok(RunResult::NoChange);
             };
 
             let id = items[selection].id;
             let title = items[selection].title.clone();
-            let new_title = match Input::<String>::new()
-                .with_prompt("Edit title")
-                .with_initial_text(&title)
-                .interact_text()
-            {
-                Ok(title) => title,
-                Err(_) => {
-                    println!("Action cancelled");
-                    return Ok(RunResult::NoChange);
-                }
+            let Some(new_title) = prompter.input("Edit title", &title)? else {
+                println!("Action cancelled");
+                return Ok(RunResult::NoChange);
             };
 
             if new_title.trim() == title {
@@ -151,7 +155,7 @@ pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
 
             todo.update_title(id, &new_title)?;
 
-            println!("Todo '[{}] {}' updated to {}", id, title, new_title);
+            println!("Todo '[{}] {}' updated to '{}'", id, title, new_title);
             Ok(RunResult::Changed)
         }
         Command::Delete => {
@@ -162,7 +166,9 @@ pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
                 return Ok(RunResult::NoChange);
             }
 
-            let Some(selection) = prompt_select(&items, "Select todo to delete")? else {
+            let labels: Vec<String> = items.iter().map(|x| x.fmt()).collect();
+
+            let Some(selection) = prompter.select(&labels, "Select todo to delete")? else {
                 println!("Action cancelled");
                 return Ok(RunResult::NoChange);
             };
@@ -170,8 +176,8 @@ pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
             let id = items[selection].id;
             let title = items[selection].title.clone();
 
-            let confirm =
-                prompt_confirm(format!("Are you sure you want to delete '{}'?", title).as_str())?;
+            let confirm = prompter
+                .confirm(format!("Are you sure you want to delete '{}'?", title).as_str())?;
 
             if !confirm {
                 println!("Delete cancelled");
@@ -183,24 +189,4 @@ pub fn run(command: Command, todo: &mut TodoList) -> Result<RunResult, String> {
             Ok(RunResult::Changed)
         }
     }
-}
-
-fn prompt_select<T: std::fmt::Display>(
-    items: &[T],
-    prompt_title: &str,
-) -> Result<Option<usize>, String> {
-    Select::new()
-        .with_prompt(prompt_title)
-        .items(items)
-        .interact()
-        .map(Some)
-        .map_err(|e| e.to_string())
-}
-
-fn prompt_confirm(prompt_title: &str) -> Result<bool, String> {
-    Confirm::new()
-        .with_prompt(prompt_title)
-        .default(false)
-        .interact()
-        .map_err(|e| e.to_string())
 }

@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoList {
@@ -77,8 +76,8 @@ impl TodoList {
     }
 }
 
-impl fmt::Display for Todo {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "[{}] {}", self.id, self.title)
+impl Todo {
+    pub fn fmt(&self) -> String {
+        format!("[{}] {}", self.id, self.title)
     }
 }

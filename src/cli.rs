@@ -100,26 +100,28 @@ pub fn run(
                     println!("# TODO");
                     items
                         .iter()
-                        .filter(|x| x.done == false)
+                        .filter(|x| !x.done)
                         .for_each(|x| println!("[{}] {}", x.id, x.title));
                     println!();
 
                     println!("# DONE");
                     items
                         .iter()
-                        .filter(|x| x.done == true)
+                        .filter(|x| x.done)
                         .for_each(|x| println!("[{}] {}", x.id, x.title));
                 }
                 ListMode::Done => {
                     println!("# DONE");
                     items
                         .iter()
+                        .filter(|x| x.done)
                         .for_each(|x| println!("[{}] {}", x.id, x.title));
                 }
                 ListMode::Todo => {
                     println!("# TODO");
                     items
                         .iter()
+                        .filter(|x| !x.done)
                         .for_each(|x| println!("[{}] {}", x.id, x.title));
                 }
             };

@@ -2,6 +2,20 @@
 
 Study purposed cli to manage todo list written in Rust.
 
-### Memo
-1. modify title
-2. introduce sorting, due date
+### Features
+1. add todo
+2. list all todos, completed todos, open todos
+3. update todo
+4. mark todo done
+5. undo marked todo
+6. delete todo
+
+### Demo
+
+![todo-cli demo](demo.gif)
+
+### Note
+To build & install CLI locally
+```cargo install --path .```
+Or after code has changed
+```cargo install --path . --force```

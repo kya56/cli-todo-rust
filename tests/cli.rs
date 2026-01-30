@@ -1,6 +1,6 @@
-use todo_cli::cli::{Command, ListMode, RunResult, run};
-use todo_cli::prompter::Prompter;
-use todo_cli::todo::TodoList;
+use todo::cli::{Command, ListMode, RunResult, run};
+use todo::prompter::Prompter;
+use todo::shared::todo::TodoList;
 
 struct FakePrompter {
     selection: Option<usize>,

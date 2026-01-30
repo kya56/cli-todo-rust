@@ -1,4 +1,4 @@
-use todo_cli::todo::{Todo, TodoList};
+use todo::shared::todo::{Todo, TodoList};
 
 #[test]
 fn add_item() {

@@ -1,5 +1,5 @@
 use crate::prompter::Prompter;
-use crate::todo::{Todo, TodoList};
+use crate::shared::todo::{Todo, TodoList};
 use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]

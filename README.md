@@ -15,7 +15,11 @@ Study purposed cli to manage todo list written in Rust.
 ![todo-cli demo](demo.gif)
 
 ### Note
-To build & install CLI locally
+- To build & install CLI locally
 ```cargo install --path .```
-Or after code has changed
+- Or after code has changed
 ```cargo install --path . --force```
+
+- To  run binaries
+```cargo run --bin todo-cli```
+```cargo run --bin todo-api```

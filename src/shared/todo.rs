@@ -22,13 +22,16 @@ impl TodoList {
         }
     }
 
-    pub fn add(&mut self, title: String) {
-        self.items.push(Todo {
+    pub fn add(&mut self, title: String) -> Todo {
+        let todo = Todo {
             id: self.next_id,
             title,
             done: false,
-        });
+        };
         self.next_id += 1;
+        self.items.push(todo.clone());
+
+        todo
     }
 
     pub fn mark(&mut self, id: u64, value: bool) -> Result<(), String> {

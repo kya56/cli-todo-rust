@@ -1,7 +1,7 @@
 use clap::Parser;
 use todo::cli::{Cli, RunResult, run};
-use todo::file::{load_todos, save_todos};
 use todo::prompter::DialoguerPrompter;
+use todo::shared::file::{load_todos, save_todos};
 
 fn main() -> Result<(), String> {
     let cli = Cli::parse();
